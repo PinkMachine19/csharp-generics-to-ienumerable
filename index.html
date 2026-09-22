@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Building IEnumerable from Scratch</title>
+  <meta name="description" content="A step-by-step tutorial that builds C# IEnumerable and IEnumerator from generics, interfaces and composition.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#1" data-goto="1">Building IEnumerable<span class="dim">&lt;T&gt;</span></a>
+      <div class="topbar-right">
+        <label class="sr-only" for="jump">Jump to step</label>
+        <select id="jump" aria-label="Jump to step"></select>
+        <button id="reset" class="btn btn-ghost" type="button" title="Clear saved progress and go back to step 1">Reset<span class="hide-sm"> tutorial</span></button>
+      </div>
+    </div>
+    <div class="progress" role="progressbar" aria-label="Tutorial progress" aria-valuemin="1">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </header>
+
+  <main id="lesson" class="lesson" tabindex="-1" aria-live="polite"></main>
+
+  <nav class="pager" aria-label="Lesson navigation">
+    <div class="pager-inner">
+      <button id="prev" class="btn" type="button">&larr; Previous</button>
+      <span id="counter" class="counter">Step 1 of 1</span>
+      <button id="next" class="btn btn-primary" type="button">Next &rarr;</button>
+    </div>
+  </nav>
+
+  <noscript><p class="noscript">This tutorial needs JavaScript enabled.</p></noscript>
+
+  <script src="js/highlight.js"></script>
+  <script src="js/lessons.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
