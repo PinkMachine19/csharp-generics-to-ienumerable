@@ -254,3 +254,5 @@ details.more .more-body { padding: 12px 14px 4px; }
 @media (max-width: 600px) {
   .hide-sm { display: none; }
 }
+
+.lesson a { color: var(--accent); text-underline-offset: 2px; }

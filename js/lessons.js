@@ -186,6 +186,70 @@ public class NumberWalker : IEnumerator<int>
 
   window.LESSONS = [
 
+    // 0 — overview: objective, destination code, the confusion, the plan
+    {
+      title: "Where we're going",
+      eyebrow: "Start here",
+      intro: `<p><strong>The objective:</strong> understand {{IEnumerable<T>}} and {{IEnumerator<T>}} well enough that you could have designed them yourself — and, more importantly, see how C# framework abstractions in general are assembled from a few small ideas: generics, interfaces, composition, and one object handing you another.</p>`,
+      codeTitle: "This is the code we'll end up with",
+      code: [{ src: `
+public class MyNumbers : IEnumerable<int>
+{
+    private readonly int[] _items = { 10, 20, 30 };
+
+    public int Count => _items.Length;
+    public int this[int index] => _items[index];
+
+    public IEnumerator<int> GetEnumerator() => new NumberWalker(this);
+}
+
+public class NumberWalker : IEnumerator<int>
+{
+    private readonly MyNumbers _numbers;
+    private int _position = -1;
+
+    public NumberWalker(MyNumbers numbers) => _numbers = numbers;
+
+    public bool MoveNext()
+    {
+        _position++;
+        return _position < _numbers.Count;
+    }
+
+    public int Current => _numbers[_position];
+
+    // (a little framework plumbing omitted — we'll see it in step 15)
+}` }, { label: "so that this works", src: `
+foreach (var n in new MyNumbers())
+{
+    Console.WriteLine(n);
+}` }],
+      sections: [
+        { title: "This is the confusion", html: `
+<p>You've used {{foreach}} and {{IEnumerable<T>}} for years. But read that code cold and the questions pile up:</p>
+<ul>
+<li>Why are there <em>two</em> interfaces? Why isn't a collection just walkable by itself? <a href="#9">→ step 9</a></li>
+<li>Why does {{GetEnumerator()}} return a <em>different object</em> instead of the collection doing the work? <a href="#8">→ step 8</a>, <a href="#11">step 11</a></li>
+<li>Why does {{_position}} start at {{-1}}? <a href="#10">→ step 10</a></li>
+<li>Why is {{MoveNext()}} a {{bool}} method and {{Current}} a property? <a href="#10">→ step 10</a></li>
+<li>What does {{<T>}} buy us, and why is {{MyNumbers}} not generic when {{IEnumerable<T>}} is? <a href="#4">→ step 4</a>, <a href="#7">step 7</a></li>
+<li>Where did {{GetEnumerator()}}, {{MoveNext()}} and {{Current}} go in the {{foreach}}? <a href="#16">→ step 16</a></li>
+</ul>
+<p>Each question has a simple answer. The confusion comes from seeing all the answers at once, already assembled.</p>` },
+        { title: "Let's break it down", html: `
+<p>Instead of explaining the finished thing top-down, we'll build it bottom-up. Each step adds one small idea to the previous one, until the code above appears on its own.</p>` }
+      ],
+      diagram: `
+Part 1  Generics                 steps 2–5     Box  →  Box<T>
+Part 2  Contracts                steps 6–8     IBox<T>, one interface returns another
+Part 3  Walking                  steps 9–11    MyNumbers + NumberWalker (all concrete)
+Part 4  Contracts for walking    steps 12–14   IMyEnumerator<T>, IMyEnumerable<T>
+Part 5  The reveal               steps 15–16   IEnumerable<T>, IEnumerator<T>, foreach
+Part 6  Zoom out                 steps 17–19   the pattern, the mental model, summary`,
+      diagramTitle: "The route",
+      before: `<p>You don't need to understand the code above yet. Keep it in the back of your mind — by step 16 every line of it will be something you wrote for a reason. Press <strong>Next</strong> to start with the simplest class possible.</p>`
+    },
+
     // 1
     {
       title: "A plain concrete class",
@@ -422,7 +486,7 @@ IBoxProvider<T>
         { q: "What concrete type does the caller receive from {{GetBox()}}?",
           a: "It's a {{Box<string>}}, but the caller doesn't know and doesn't need to. It sees only {{IBox<string>}}." },
         { q: "Does {{GetBox()}} return the same box every time?",
-          a: "Here, no — it creates a new one per call. Whether a method returns a fresh object or a shared one is a design decision. Hold onto that: it becomes crucial in step 10." }
+          a: "Here, no — it creates a new one per call. Whether a method returns a fresh object or a shared one is a design decision. Hold onto that: it becomes crucial in step 11." }
       ],
       before: `<p>A method can return an abstraction. The caller gets <em>behaviour</em>, not a concrete class.</p>`
     },
@@ -557,7 +621,7 @@ b.MoveNext();       // b is on 10 — unaffected by a` }],
       why: `<p><strong>The collection owns the data. The walker owns the traversal state.</strong> The collection never needs to remember where any caller is. Each call to {{GetWalker()}} produces an independent bookmark, so any number of walks can happen at once — nested loops, two threads reading, a LINQ query inside a loop.</p>`,
       predict: [
         { q: "Why does {{GetWalker()}} create a new walker instead of returning one stored in a field?",
-          a: "Because each walk needs private state. A stored walker would be a shared bookmark — the exact problem from step 8, just moved into a field." },
+          a: "Because each walk needs private state. A stored walker would be a shared bookmark — the exact problem from step 9, just moved into a field." },
         { q: "What would happen if two callers shared the same walker?",
           a: "Every {{MoveNext()}} by one caller advances the other. With 10, 20, 30 and two callers alternating, one might see 10 and 30 and the other only 20. Neither sees the whole collection." }
       ],
@@ -587,7 +651,7 @@ IMyEnumerator<T>                    "something that can walk through T values"
           │ implements, with T = int
           │
     NumberWalker`,
-      changed: `<p>A generic interface with the walker's two public members. {{NumberWalker}} implements it with {{T = int}} — the step 6 trick of closing a generic interface.</p>`,
+      changed: `<p>A generic interface with the walker's two public members. {{NumberWalker}} implements it with {{T = int}} — the step 7 trick of closing a generic interface.</p>`,
       why: `<p>The interface says nothing about arrays, indexes or {{MyNumbers}}. That's the point: a walker over a linked list, lines of a file, or an infinite sequence of Fibonacci numbers could all implement it. Consumers only learn how to <em>walk</em>, never how the data is stored.</p>`,
       predict: [
         { q: "Why isn't {{Count}} part of {{IMyEnumerator<T>}}?",
@@ -631,12 +695,12 @@ IMyEnumerator<T>
      └── Current
 
 
-Compare with step 7 — same shape:
+Compare with step 8 — same shape:
 
 IBoxProvider<T>  ── GetBox() ──────────▶  IBox<T>
 IMyEnumerable<T> ── GetEnumerator() ───▶  IMyEnumerator<T>`,
       changed: `<p>{{GetWalker()}} was renamed {{GetEnumerator()}} and now returns the interface, not the concrete walker. {{MyNumbers}} implements {{IMyEnumerable<int>}}.</p>`,
-      why: `<p>Now <em>both</em> sides are contracts. Code can walk any {{IMyEnumerable<T>}} without knowing what collection it is or what walker it produces. This is exactly step 7: one abstraction that hands out another.</p>`,
+      why: `<p>Now <em>both</em> sides are contracts. Code can walk any {{IMyEnumerable<T>}} without knowing what collection it is or what walker it produces. This is exactly step 8: one abstraction that hands out another.</p>`,
       predict: [
         { q: "The method's return type is {{IMyEnumerator<int>}} but it returns a {{NumberWalker}}. Why does that compile?",
           a: "{{NumberWalker}} implements {{IMyEnumerator<int>}}, so it <em>is</em> one. The caller only ever sees the interface." }
@@ -771,7 +835,7 @@ foreach (var number in numbers)
              │           └── numbers.GetEnumerator()
              │
              └── each pass: MoveNext() is true → number = Current`,
-      changed: `<p>Nothing. This is the loop from step 13, wearing a keyword.</p>`,
+      changed: `<p>Nothing. This is the loop from step 14, wearing a keyword.</p>`,
       why: `<p><strong>{{foreach}} is syntax that hides the enumerator plumbing.</strong> It calls {{GetEnumerator()}} once, then loops “move, then read” until {{MoveNext()}} returns {{false}}. There's no magic list access and no index.</p>`,
       extra: [{ summary: "Closer to the real lowering", html: `
 <p>Because {{IEnumerator<T>}} is {{IDisposable}}, the compiler also guarantees cleanup, even if the loop body throws or {{break}}s:</p>
@@ -789,10 +853,10 @@ finally
     enumerator.Dispose();
 }</pre>` }],
       predict: [
-        { q: "Would {{foreach}} work over your {{IMyEnumerable<int>}} version of {{MyNumbers}} from step 12?",
+        { q: "Would {{foreach}} work over your {{IMyEnumerable<int>}} version of {{MyNumbers}} from step 13?",
           a: "Yes. {{foreach}} is <em>pattern-based</em>: the compiler only needs a {{GetEnumerator()}} method whose return type has {{bool MoveNext()}} and a {{Current}} property. Implementing {{IEnumerable<T>}} is the conventional way to provide that — and it's what LINQ requires — but the loop itself only needs the shape." },
         { q: "How many enumerators does a {{foreach}} create?",
-          a: "One per loop. Nested {{foreach}} over the same collection creates two independent walkers — exactly the step 10 scenario." }
+          a: "One per loop. Nested {{foreach}} over the same collection creates two independent walkers — exactly the step 11 scenario." }
       ],
       before: `<p>Every {{foreach}} you've ever written was: get a fresh walker, move-then-read until done.</p>`,
       full: FULL_REAL
@@ -811,11 +875,11 @@ CreateIterator()        GetEnumerator()    GetEnumerator()`,
       changed: `<p>Only the vocabulary.</p>`,
       why: `<p>Along the way you used every idea that frameworks are made of:</p>
 <ul>
-<li><strong>Separation of responsibilities</strong> — data in one object, traversal state in another (step 8).</li>
-<li><strong>Composition / delegation</strong> — the walker holds a reference to the collection and delegates reads to it (step 9).</li>
-<li><strong>Abstraction through interfaces</strong> — callers depend on contracts, not classes (steps 5, 11, 12).</li>
-<li><strong>Generic contracts</strong> — one interface, any {{T}} (steps 3, 5).</li>
-<li><strong>One abstraction producing another</strong> — {{GetBox()}}, then {{GetEnumerator()}} (steps 7, 12).</li>
+<li><strong>Separation of responsibilities</strong> — data in one object, traversal state in another (step 9).</li>
+<li><strong>Composition / delegation</strong> — the walker holds a reference to the collection and delegates reads to it (step 10).</li>
+<li><strong>Abstraction through interfaces</strong> — callers depend on contracts, not classes (steps 6, 12, 13).</li>
+<li><strong>Generic contracts</strong> — one interface, any {{T}} (steps 4, 6).</li>
+<li><strong>One abstraction producing another</strong> — {{GetBox()}}, then {{GetEnumerator()}} (steps 8, 13).</li>
 </ul>`,
       extra: [{ summary: "Bonus: yield return writes the walker for you", html: `
 <p>Writing a walker class by hand is tedious, so C# will generate one:</p>
@@ -828,7 +892,7 @@ CreateIterator()        GetEnumerator()    GetEnumerator()`,
 <p>The compiler turns this method into a hidden class with a state field, a {{MoveNext()}} and a {{Current}} — the same thing as your {{NumberWalker}}, just machine-written.</p>` }],
       predict: [
         { q: "Where does LINQ fit into this?",
-          a: "LINQ's {{Where}}, {{Select}} and friends are extension methods on {{IEnumerable<T>}}. Each one returns a new {{IEnumerable<T>}} whose walker wraps the source's walker. It's step 7 composed with itself, over and over." }
+          a: "LINQ's {{Where}}, {{Select}} and friends are extension methods on {{IEnumerable<T>}}. Each one returns a new {{IEnumerable<T>}} whose walker wraps the source's walker. It's step 8 composed with itself, over and over." }
       ],
       before: `<p>You don't need to memorise the pattern name. You need to recognise the shape: a collection that hands out independent walkers through a contract.</p>`
     },
@@ -895,7 +959,7 @@ foreach                           syntax over all of the above`,
 <li>{{IServiceProvider.GetService()}} — an abstraction that hands out other objects.</li>
 <li>{{IAsyncEnumerable<T>}} / {{await foreach}} — the same walker idea with {{MoveNextAsync()}}.</li>
 <li>{{IQueryable<T>}} — an enumerable whose walker is produced by translating a query.</li>
-<li>{{ILoggerFactory.CreateLogger()}}, {{IHttpClientFactory.CreateClient()}} — step 7 again.</li>
+<li>{{ILoggerFactory.CreateLogger()}}, {{IHttpClientFactory.CreateClient()}} — step 8 again.</li>
 </ul>
 <p>Use <strong>Previous</strong> or the step menu to revisit anything, or <strong>Reset tutorial</strong> to start over.</p>`
     }

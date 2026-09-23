@@ -1,7 +1,7 @@
 // Tutorial shell: renders one lesson at a time, handles Previous / Next,
 // remembers the current step in localStorage, and drives the small widgets.
 (function () {
-  var STORAGE_KEY = "ienumerable-tutorial:step";
+  var STORAGE_KEY = "ienumerable-tutorial:v2:step";
   var lessons = window.LESSONS;
   var total = lessons.length;
   var ITEMS = [10, 20, 30];
@@ -65,13 +65,18 @@
 
   function renderLesson(lesson, n) {
     var h = "";
-    h += '<p class="eyebrow">' + (lesson.summary ? "Summary" : "Step " + n + " of " + total) + "</p>";
+    var eyebrow = lesson.summary ? "Summary" : "Step " + n + " of " + total;
+    if (lesson.eyebrow) eyebrow = lesson.eyebrow + " · " + eyebrow;
+    h += '<p class="eyebrow">' + eyebrow + "</p>";
     h += "<h1>" + escapeHtml(lesson.title) + "</h1>";
     h += '<div class="intro">' + prose(lesson.intro) + "</div>";
 
-    if (lesson.code) h += section("The code", codeBlocks(lesson.code));
+    if (lesson.code) h += section(lesson.codeTitle || "The code", codeBlocks(lesson.code));
+    (lesson.sections || []).forEach(function (s) {
+      h += section(escapeHtml(s.title), '<div class="card">' + prose(s.html) + "</div>");
+    });
     if (lesson.widget) h += section("Try it", '<div class="widget" id="widget"></div>');
-    if (lesson.diagram) h += section(lesson.summary ? "The progression" : "The picture",
+    if (lesson.diagram) h += section(lesson.diagramTitle || (lesson.summary ? "The progression" : "The picture"),
       '<pre class="diagram">' + escapeHtml(clean(lesson.diagram)) + "</pre>");
     if (lesson.changed) h += section("What changed?", '<div class="card">' + prose(lesson.changed) + "</div>");
     if (lesson.why) h += section(lesson.summary ? "The deeper point" : "Why?",
