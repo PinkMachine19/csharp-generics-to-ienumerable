@@ -253,7 +253,7 @@ Part 6  Zoom out                 steps 17–19   the pattern, the mental model, 
     // 1
     {
       title: "A plain concrete class",
-      intro: `<p>We start with the most boring type possible. Everything later in this tutorial is built by changing this one class a little at a time.</p>`,
+      intro: `<p>You've seen the destination. Now forget it for a moment: we start with the most boring type possible, and everything later is built by changing this one class a little at a time.</p>`,
       code: [{ src: `
 public class Box
 {
@@ -961,6 +961,7 @@ foreach                           syntax over all of the above`,
 <li>{{IQueryable<T>}} — an enumerable whose walker is produced by translating a query.</li>
 <li>{{ILoggerFactory.CreateLogger()}}, {{IHttpClientFactory.CreateClient()}} — step 8 again.</li>
 </ul>
+<p>Go back to the code on the <a href="#1">Start here</a> page. Every line of it should now read as a decision you made yourself, and each question under “This is the confusion” should have a one-sentence answer.</p>
 <p>Use <strong>Previous</strong> or the step menu to revisit anything, or <strong>Reset tutorial</strong> to start over.</p>`
     }
   ];
